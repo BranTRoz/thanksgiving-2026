@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Thanksgiving">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f3eee8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#3b332c" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Thanksgiving Cooking Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm kitchen companion, glanceable from arm's length with flour on your hands.
+   IDEA: the ticket rail on a restaurant pass: each task a ticket you tap off.
+   PICTURE: the "Next up" ticket, big, above a list of tasks with large hanging times.
+   COLOUR and TYPE: cranberry rail, white counter, gold for the next action; dish tags carry the colour. Familjen Grotesk + Figtree.
+   LAYOUT: left rail (days, dishes, progress) for landscape iPad; it becomes a top strip under 820px. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#16110f);--ink:light-dark(#1d1916,#f3ece6);--mute:light-dark(#5f5750,#b9ada3);
+--line:light-dark(#e6dfd8,#3a302b);--card:light-dark(#faf6f2,#221a17);--rail:light-dark(#f3eee8,#3b332c);
+--railInk:light-dark(#2a2420,#f6efe7);--railMute:light-dark(#6b6058,#cbbdaf);--railActive:light-dark(#ffffff,#4d433a);--railTrack:light-dark(#e2d9cf,#5a4d42);--railBar:light-dark(#d08f12,#f0b54a);--gold:#f0b54a;--goldInk:#3a2600}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 Figtree,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:"Familjen Grotesk",Figtree,sans-serif;margin:0;line-height:1.08;text-wrap:balance}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.beef{background:light-dark(#f7dcd5,#4a1d16);color:light-dark(#7a2414,#ffc9bb)}
+.gravy{background:light-dark(#ecdfd2,#3e2c1d);color:light-dark(#5a3a1e,#f0d3b6)}
+.pot{background:light-dark(#f1ead0,#3a3318);color:light-dark(#5e4a0e,#efe0a4)}
+.corn{background:light-dark(#fbe5ad,#4a3605);color:light-dark(#6e4500,#ffd77a)}
+.greens{background:light-dark(#d6ead7,#173822);color:light-dark(#1f5a2c,#a8e0b3)}
+.brulee{background:light-dark(#f6d5e3,#4a1830);color:light-dark(#7d1f45,#ffbcd6)}
+.sides{background:light-dark(#e9dcf0,#33203d);color:light-dark(#56266a,#e3c3f2)}
+.setup{background:light-dark(#e3e6ec,#272b33);color:light-dark(#333b48,#d3d9e4)}
+.app{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100vh}
+.rail{background:var(--rail);color:var(--railInk);border-right:1px solid var(--line);padding:28px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:22px}
+.brand h1{font-size:26px}.brand p{margin:4px 0 0;color:var(--railMute);font-size:14px}
+.grp{display:flex;flex-direction:column;gap:4px}
+.grp>span{font-size:13px;color:var(--railMute);font-weight:600;padding:0 10px 4px}
+.nav{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;padding:10px 12px;border-radius:12px;min-height:44px;justify-content:center}
+.nav[aria-current=page]{background:var(--railActive);box-shadow:0 0 0 1px var(--line)}
+.nav b{font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.nav small{font-weight:500;color:var(--railMute);font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:9px;background:var(--railTrack);overflow:hidden}.bar i{display:block;height:100%;background:var(--railBar);transition:width .3s}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.navd{flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;font-weight:600;font-size:16px}
+.sync{margin-top:auto;font-size:13px;color:var(--railMute)}
+main{padding:32px clamp(18px,3.5vw,44px) 64px;max-width:1040px;width:100%}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.head h2{font-size:clamp(32px,4vw,46px)}.head p{margin:6px 0 0;color:var(--mute)}
+.big{font-family:"Familjen Grotesk",sans-serif;font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;text-align:right}
+.big small{display:block;font:500 14px Figtree,sans-serif;color:var(--mute);margin-top:4px}
+.nextc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 22px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px;margin-bottom:22px}
+.nextc .lbl{grid-column:1/-1;font-size:14px;font-weight:700;color:var(--mute)}
+.nextc .tm{font-family:"Familjen Grotesk",sans-serif;font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nextc .tx{font-size:21px;font-weight:500;margin-top:6px}
+.go{background:var(--gold);color:var(--goldInk);border:0;border-radius:14px;padding:0 22px;min-height:56px;font-weight:700;font-size:17px;cursor:pointer}
+.alldone{background:var(--card);border-radius:20px;padding:22px 24px;margin-bottom:22px;font-size:20px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;min-height:44px;padding:0 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px}
+.chip[aria-pressed=true]{border-color:var(--ink)}
+.chip .dot{border-color:transparent}
+.sec{display:flex;align-items:baseline;gap:10px;margin:26px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.sec h3{font-size:22px}.sec span{color:var(--mute);font-size:15px}
+.row{display:grid;grid-template-columns:40px 78px minmax(0,1fr);gap:12px;align-items:start;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 8px;min-height:64px;cursor:pointer;border-radius:0}
+.row .ck{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--mute);display:grid;place-items:center;margin-top:-3px}
+.row .ck svg{width:18px;height:18px;opacity:0}
+.row .tm{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .bd{display:flex;flex-direction:column;gap:6px}.row .tags{display:flex;gap:6px;flex-wrap:wrap}
+.row .tx{font-size:17px}
+.row.done{opacity:.5}.row.done .tx{text-decoration:line-through}
+.row.done .ck{background:var(--ink);border-color:var(--ink)}.row.done .ck svg{opacity:1;stroke:var(--bg)}
+.row.next{background:light-dark(#fff6e3,#2b2112)}.row.next .ck{border-color:var(--gold)}
+.row.meal .tx{font-family:"Familjen Grotesk",sans-serif;font-size:22px;font-weight:700}
+.row[hidden]{display:none}
+.foot{display:flex;justify-content:flex-end;margin-top:22px}
+.ghost{border:1.5px solid var(--line);background:transparent;border-radius:12px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:600;color:var(--mute)}
+.ghost.arm{border-color:#b3261e;color:#b3261e}
+.dish{display:flex;flex-direction:column;gap:22px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px}
+.panel h3{font-size:21px;margin-bottom:12px}
+.ing{margin:0;padding:0;list-style:none;columns:2 300px;column-gap:44px}.ing li{padding:9px 0;border-bottom:1px solid var(--line);break-inside:avoid}
+.ing li.sub{font-weight:700;padding-top:16px}
+.keys{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.keys span{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-weight:600;font-size:15px;white-space:nowrap}
+.plan{margin:6px 0 0;font-size:18px}
+.stage h4{font:700 17px "Familjen Grotesk",sans-serif;margin:18px 0 0;color:var(--mute)}.stage h4:first-child{margin-top:0}
+.stage .row{padding:12px 0;grid-template-columns:40px 70px minmax(0,1fr)}
+a{color:inherit}
+@media(max-width:900px){.dish{grid-template-columns:1fr}}
+@media(max-width:820px){
+.app{grid-template-columns:1fr}
+.rail{position:sticky;height:auto;flex-direction:row;overflow-x:auto;padding:10px 12px;gap:8px;z-index:2}
+.brand,.grp>span,.sync,.bar{display:none}
+.grp{flex-direction:row;gap:6px}.nav{flex:none;padding:8px 12px;white-space:nowrap}
+.nextc{grid-template-columns:1fr}.nextc .tm{font-size:34px}
+}
+@media(max-width:600px){.row{grid-template-columns:36px 62px minmax(0,1fr);gap:8px}.row .tm{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="rail" id="rail" aria-label="Guide sections"></nav>
+<main id="main"></main>
+</div>
+<script>
+{
+const DISH={
+ beef:{label:'Beef',cls:'beef',dot:'#c0452c',name:'Sous vide beef tenderloin',yield:'2–2½ lb center-cut roast · serves 4',
+  plan:'Thaw Sun–Tue. Trim, tie, salt and bag on Wednesday. Thursday: 128°F bath from 11:00, grill sear at 2:45.',
+  keys:['Bath 128°F','3 hr min, 4½ hr max','Sear 4–6 min','No rest needed'],
+  ing:['2–2½ lb center-cut tenderloin roast (from the 4–6 lb whole)','Kosher salt, about 1 tsp per lb','Black pepper','1 thyme sprig (optional; no raw garlic in the bag)','Neutral oil, for the sear','Butcher’s twine']},
+ gravy:{label:'Gravy',cls:'gravy',dot:'#8a5a32',name:'Beef gravy',yield:'About 2 cups',
+  plan:'Fully made Wednesday from browned tenderloin trim. Thursday: reheat, then whisk in the boiled, strained bag juices.',
+  keys:['Made Wed','Bag juices at 2:40','Season lightly'],
+  ing:['Tenderloin trim','1 Tbsp neutral oil','3 Tbsp unsalted butter','1 shallot, minced','3 Tbsp all-purpose flour','¼ cup dry red wine (optional)','2 cups low-sodium beef stock, plus more to thin','1 tsp Worcestershire sauce','1 thyme sprig (or ¼ tsp dried)','Salt and black pepper']},
+ pot:{label:'Potatoes',cls:'pot',dot:'#b8962a',name:'Mashed potatoes',yield:'Serves 4',
+  plan:'Peeled and held in cold water Wednesday. Thursday: boil at 1:45, mash at 2:10, hold covered in Oven 2 at 200°F.',
+  keys:['Cold-water start','15–20 min simmer','Hold 200°F'],
+  ing:['2 lb Yukon Gold potatoes, peeled, 2-in chunks','1 Tbsp kosher salt (for the water)','5 Tbsp unsalted butter','½ cup sour cream, room temperature','¼–½ cup whole milk, warmed','Salt and pepper']},
+ corn:{label:'Corn pudding',cls:'corn',dot:'#e0a21a',name:'Corn pudding',yield:'1½-qt dish · serves 4–6',
+  plan:'Custard mixed Wednesday and refrigerated. Thursday: butter melts in the dish as Oven 1 heats; bake 1:45–2:35.',
+  keys:['350°F','45–50 min','Center just set','Rest 10 min'],
+  ing:['3 cups frozen corn kernels, thawed (16-oz bag)','2 large eggs','½ cup whole milk','½ cup heavy cream','2 Tbsp all-purpose flour','1 Tbsp granulated sugar','1 tsp kosher salt','¼ tsp black pepper','Pinch of cayenne (optional)','3 Tbsp unsalted butter (for the dish)']},
+ greens:{label:'Greens',cls:'greens',dot:'#3f8a4f',name:'Collard greens with smoked hock',yield:'Serves 4',
+  plan:'Fully cooked Wednesday (better the next day). Thursday: reheat covered on low from 2:05; dress at the table.',
+  keys:['Hock 1 hr','Greens 45–60 min','Salt at the end'],
+  ing:['1 Tbsp neutral oil or bacon fat','1 medium yellow onion, diced','3 garlic cloves, sliced','1 smoked ham hock (1–1¼ lb)','4 cups low-sodium chicken stock + 2 cups water','2 bunches collards (about 2 lb)','2 Tbsp apple cider vinegar','1 tsp brown sugar','¼ tsp red pepper flakes','Salt to taste',
+   {sub:'Chow-chow dressing'},'½ cup chow-chow','1 Tbsp chow-chow brine (or cider vinegar)','1 Tbsp olive oil','1 tsp honey','Pinch of salt']},
+ brulee:{label:'Brûlée',cls:'brulee',dot:'#b23a6e',name:'Cranberry crème brûlée',yield:'Half batch · serves 4',
+  plan:'Baked Wednesday evening, chilled overnight (within the recipe’s 1-day limit). Thursday: torch at about 4:15.',
+  keys:['325°F water bath','Check at 25–30 min','Center 180°F','Torch to serve'],
+  link:'https://cooking.nytimes.com/recipes/793392477-cranberry-creme-brulee',
+  ing:['1 cup heavy cream','¼ cup whole milk','½ tsp vanilla extract','⅛ tsp kosher salt (Diamond Crystal)','3 large egg yolks','5 oz cranberries (about 1¼ cups)','Zest and juice of ½ small orange (about 2 Tbsp juice)','½ cup sugar, divided (¼ for berries, ¼ for yolks)','2 Tbsp sugar, for the torch','Boiling water, for the bath','8-in pie plate or four 6-oz ramekins']},
+ sides:{label:'Sides',cls:'sides',dot:'#7b4b94',name:'Canned cranberry sauce',yield:'2 cans',
+  plan:'Chill the cans Wednesday so it slices cleanly. Open and plate at 2:50 Thursday.',
+  keys:['Chill overnight','Plate at 2:50'],ing:['2 cans cranberry sauce']},
+ setup:{label:'Setup',cls:'setup',dot:'#6b7280'}
+};
+const DAYS=[
+ {id:'before',nav:'Sun–Tue',title:'Before the big days',sub:'Thaw, shop and check gear',sections:[
+  ['Sunday–Monday','',[['b1','Sun/Mon',['beef'],'Move the tenderloin from freezer to fridge on a rimmed sheet pan. It needs 1½–2 days to thaw.'],
+   ['b2','Mon/Tue',['setup'],'Shop the grocery checklist. Everything keeps until Thursday.']]],
+  ['Tuesday','',[['b3','Tue',['setup'],'Check torch fuel, propane and sous vide bags.']]]]},
+ {id:'wednesday',nav:'Wednesday',title:'Wednesday · Prep day',sub:'About 4 hours of active work, spread out',sections:[
+  ['Morning','before noon',[
+   ['w1','10:00',['greens'],'Wash and cut collards into 1-in ribbons. Sauté onion and garlic, add hock, stock and water; simmer covered 1 hr.'],
+   ['w2','10:15',['beef'],'Trim tenderloin (save trim). Cut a 2–2½ lb center roast, tie every 1½ in. Salt 1 tsp/lb, pepper; seal and refrigerate. Freeze extra steaks.'],
+   ['w3','11:00',['greens'],'Add collards in batches; simmer partly covered 45–60 min.'],
+   ['w4','11:30',['gravy'],'Brown trim 8–10 min. Butter + shallot, then flour 2–3 min. Add wine, stock, Worcestershire, thyme; simmer 10 min. Cool, refrigerate.']]],
+  ['Afternoon','12–3 PM',[
+   ['w5','12:00',['greens'],'Shred hock meat back into the pot. Add vinegar, brown sugar, pepper flakes; salt to taste. Cool, refrigerate.'],
+   ['w6','12:30',['corn'],'Blend 1 cup corn with eggs, milk, cream, flour, sugar, salt, pepper. Stir in remaining 2 cups corn. Cover, refrigerate.'],
+   ['w7','12:45',['greens'],'Stir together the chow-chow dressing; refrigerate.'],
+   ['w8','1:00',['pot'],'Peel and cut into 2-in chunks; cover with cold water and refrigerate.'],
+   ['w9','1:15',['setup','sides'],'Pull out serving dishes and platter. Put the cranberry sauce cans in the fridge.']]],
+  ['Evening','3 PM+',[
+   ['w10','6:00',['brulee'],'Oven to 325°F. Cook cranberries, orange zest, juice and ¼ cup sugar until jammy, 6–8 min. Heat cream mix until steaming; combine.'],
+   ['w11','6:15',['brulee'],'Whisk yolks with ¼ cup sugar; temper with 1 cup hot cranberry cream, whisk back in. Strain into dish; set in water bath.'],
+   ['w12','6:20',['brulee'],'Bake; check at 25 min (ramekins) or 30 min (pie plate). Done when the center jiggles like Jell-O, 180°F.'],
+   ['w13','7:00',['brulee'],'Cool in the water bath 1 hr. Cover (plastic not touching) and refrigerate overnight.']]]]},
+ {id:'thursday',nav:'Thursday',title:'Thursday · Dinner at 3:00',sub:'Sous vide 128°F · Oven 1 350°F · Oven 2 200°F · Grill high',sections:[
+  ['Morning','before noon',[
+   ['t1','10:30',['beef'],'Fill the sous vide container; set to 128°F.'],
+   ['t2','11:00',['beef'],'Tenderloin into the bath. 3 hr minimum; out by 3:30.']]],
+  ['Afternoon','12–3 PM',[
+   ['t3','1:15',['corn'],'Take the custard out of the fridge.'],
+   ['t4','1:30',['setup'],'Oven 1 to 350°F with 3 Tbsp butter in the pudding dish. Oven 2 to 200°F with plates and platter.'],
+   ['t5','1:30',['pot'],'Drain; cover with fresh cold, salted water.'],
+   ['t6','1:45',['corn'],'Swirl the butter, pour in custard; bake in Oven 1, 45–50 min.'],
+   ['t7','1:45',['pot'],'Bring to a boil; simmer until fork-tender, 15–20 min.'],
+   ['t8','2:05',['greens','gravy'],'Reheat both on low, covered; stir now and then.'],
+   ['t9','2:10',['pot'],'Drain, steam-dry 2 min, mash. Butter, then sour cream, then warm milk. Covered dish into Oven 2.'],
+   ['t10','2:25',['setup'],'Gas grill on high, lid closed.'],
+   ['t11','2:35',['corn'],'Out when the center is just set; rest.'],
+   ['t12','2:40',['beef','gravy'],'Beef out of the bag. Boil bag juices, strain into gravy. Pat beef very dry.'],
+   ['t13','2:45',['beef'],'Sear 4–6 min total, turning every minute.'],
+   ['t14','2:50',['sides'],'Open and plate the cranberry sauce.'],
+   ['t15','2:52',['beef','greens'],'Slice ½–¾ in thick. Drizzle chow-chow dressing on the greens.']]],
+  ['Evening','3 PM+',[
+   ['t16','3:00',[],'Dinner is served'],
+   ['t17','4:15',['brulee'],'Sprinkle 2 Tbsp sugar evenly; torch. Harden 5 min, chill 10 min, serve.']]]]}
+];
+const ALL=[];DAYS.forEach(d=>d.sections.forEach(s=>s[2].forEach(t=>ALL.push({id:t[0],t:t[1],tags:t[2],txt:t[3],day:d.id}))));
+const BYDAY=id=>ALL.filter(t=>t.day===id);
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const KEY='tg26-done';
+let done=new Set();try{done=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(e){}
+let col=null,syncMsg='Checks are saved on this iPad',filter={},armTimer=null;
+const saveLocal=()=>{try{localStorage.setItem(KEY,JSON.stringify([...done]))}catch(e){}};
+const rail=document.getElementById('rail'),main=document.getElementById('main');
+const defView=()=>{const n=new Date(),d=n.getFullYear()*10000+(n.getMonth()+1)*100+n.getDate();return d>=20261126?'thursday':d===20261125?'wednesday':'before'};
+const view=()=>{const h=location.hash.slice(1);return (DAYS.some(d=>d.id===h)||(h.startsWith('dish-')&&DISH[h.slice(5)]))?h:defView()};
+const tagHTML=k=>`<span class="tag ${DISH[k].cls}">${DISH[k].label}</span>`;
+const rowHTML=(t,next)=>`<button class="row${done.has(t.id)?' done':''}${next?' next':''}${t.tags.length?'':' meal'}" data-id="${t.id}" aria-pressed="${done.has(t.id)}"><span class="ck" aria-hidden="true">${CHECK}</span><span class="tm">${t.t}</span><span class="bd">${t.tags.length?`<span class="tags">${t.tags.map(tagHTML).join('')}</span>`:''}<span class="tx">${t.txt}</span></span></button>`;
+function renderRail(v){
+ const dayLinks=DAYS.map(d=>{const ts=BYDAY(d.id),n=ts.filter(t=>done.has(t.id)).length;
+  return `<a class="nav" href="#${d.id}" ${v===d.id?'aria-current="page"':''}><b>${d.nav}<small>${n}/${ts.length}</small></b><span class="bar"><i style="width:${Math.round(n/ts.length*100)}%"></i></span></a>`}).join('');
+ const dishLinks=Object.keys(DISH).filter(k=>DISH[k].name).map(k=>`<a class="nav navd" href="#dish-${k}" ${v==='dish-'+k?'aria-current="page"':''}><span class="dot" style="background:${DISH[k].dot}"></span>${DISH[k].name.replace('Sous vide beef','Beef').replace(' with smoked hock','')}</a>`).join('');
+ rail.innerHTML=`<div class="brand"><h1>Thanksgiving 2026</h1><p>Dinner Thursday at 3:00 PM</p></div><div class="grp"><span>Days</span>${dayLinks}</div><div class="grp"><span>Dishes</span>${dishLinks}</div><div class="sync">${syncMsg}</div>`;
+}
+function renderDay(d){
+ const ts=BYDAY(d.id),n=ts.filter(t=>done.has(t.id)).length,next=ts.find(t=>!done.has(t.id));
+ const f=filter[d.id]||null,tagsHere=[...new Set(ts.flatMap(t=>t.tags))];
+ const nextHTML=next?`<div class="nextc"><span class="lbl">Next up</span><span class="tm">${next.t}</span><div>${next.tags.length?`<span class="tags">${next.tags.map(tagHTML).join(' ')}</span>`:''}<div class="tx">${next.txt}</div></div><button class="go" data-id="${next.id}">Mark done</button></div>`
+  :`<div class="alldone">Everything for ${d.nav} is done.</div>`;
+ const chips=`<div class="chips" role="group" aria-label="Show one dish"><button class="chip" data-f="" aria-pressed="${!f}">All</button>${tagsHere.map(k=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}"><span class="dot" style="background:${DISH[k].dot}"></span>${DISH[k].label}</button>`).join('')}</div>`;
+ const secs=d.sections.map(s=>{const rows=s[2].map(r=>ALL.find(t=>t.id===r[0])).filter(t=>!f||t.tags.includes(f));
+  return rows.length?`<div class="sec"><h3>${s[0]}</h3><span>${s[1]}</span></div>${rows.map(t=>rowHTML(t,next&&t.id===next.id)).join('')}`:''}).join('');
+ main.innerHTML=`<div class="head"><div><h2>${d.title}</h2><p>${d.sub}</p></div><div class="big">${n}/${ts.length}<small>tasks done</small></div></div>${nextHTML}${chips}${secs}<div class="foot"><button class="ghost" id="reset" data-day="${d.id}">Clear ${d.nav} checks</button></div>`;
+}
+function renderDish(k){
+ const x=DISH[k];
+ const ing=x.ing.map(i=>typeof i==='string'?`<li>${i}</li>`:`<li class="sub">${i.sub}</li>`).join('');
+ const stage=DAYS.map(d=>{const ts=BYDAY(d.id).filter(t=>t.tags.includes(k));return ts.length?`<h4>${d.nav}</h4>${ts.map(t=>rowHTML(t,false)).join('')}`:''}).join('');
+ main.innerHTML=`<div class="head"><div><span class="tag ${x.cls}">${x.label}</span><h2 style="margin-top:10px">${x.name}</h2><p>${x.yield}</p></div></div>
+ <p class="plan">${x.plan}</p><div class="keys">${x.keys.map(s=>`<span>${s}</span>`).join('')}</div>
+ <div class="dish" style="margin-top:24px"><section class="panel"><h3>Ingredients</h3><ul class="ing">${ing}</ul>${x.link?`<p style="margin:14px 0 0;font-size:15px">Full method: <a href="${x.link}">NYT Cooking recipe</a> (cooking.nytimes.com)</p>`:''}</section>
+ <section class="panel stage"><h3>Staging</h3>${stage}</section></div>`;
+}
+function render(){const v=view();renderRail(v);v.startsWith('dish-')?renderDish(v.slice(5)):renderDay(DAYS.find(d=>d.id===v))}
+const queue={};
+function write(id,on){if(!col)return;queue[id]=(queue[id]||Promise.resolve()).then(()=>on?col.doc(id).set({done:true,at:new Date().toISOString()}):col.doc(id).delete()).catch(e=>{if(e&&(e.code==='invalid_argument'||e.code==='revoked'||e.code==='not_granted')){col=null;syncMsg='Saved on this device only';renderRail(view())}})}
+function toggle(id){const on=!done.has(id);on?done.add(id):done.delete(id);saveLocal();write(id,on);render()}
+main.addEventListener('click',e=>{
+ const r=e.target.closest('[data-id]');if(r){toggle(r.dataset.id);return}
+ const c=e.target.closest('.chip');if(c){filter[view()]=c.dataset.f||null;render();return}
+ const b=e.target.closest('#reset');if(b){
+  if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again to clear';clearTimeout(armTimer);armTimer=setTimeout(()=>{b.classList.remove('arm');b.textContent=`Clear ${DAYS.find(d=>d.id===b.dataset.day).nav} checks`},3000);return}
+  BYDAY(b.dataset.day).forEach(t=>{if(done.has(t.id)){done.delete(t.id);write(t.id,false)}});saveLocal();render()}
+});
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+}
+</script>
+</body>
+</html>
