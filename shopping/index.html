@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TG Shopping">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f3eee8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2a241f" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Thanksgiving Shopping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a calm list you can use one-handed in a grocery aisle.
+   IDEA: the paper list in your pocket, but it crosses itself off and hides what's done.
+   PICTURE: the list itself, big tap rows grouped by store section, with a running count on top.
+   COLOUR and TYPE: warm stone header, white list, gold checks; Familjen Grotesk + Figtree, matching the cooking guide.
+   LAYOUT: one column, sticky header with progress and a Hide done switch, sections down the page. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#16110f);--ink:light-dark(#1d1916,#f3ece6);--mute:light-dark(#655c55,#b9ada3);
+--line:light-dark(#ebe4dd,#352c27);--head:light-dark(#f3eee8,#2a241f);--track:light-dark(#e2d9cf,#4a3f36);
+--gold:#e8a92b;--goldInk:#3a2600;--card:light-dark(#faf6f2,#211a17)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 Figtree,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+header{position:sticky;top:0;z-index:3;background:var(--head);border-bottom:1px solid var(--line);padding:14px 18px 12px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h1{font:700 24px/1.1 "Familjen Grotesk",Figtree,sans-serif;margin:0}
+.count{font:700 22px "Familjen Grotesk",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.count small{font:500 13px Figtree,sans-serif;color:var(--mute);margin-left:4px}
+.bar{height:6px;border-radius:9px;background:var(--track);overflow:hidden;margin:10px 0 10px}.bar i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.ctrl{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sw{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;min-height:44px;cursor:pointer;font-weight:600;font-size:15px}
+.sw .tr{width:46px;height:28px;border-radius:99px;background:var(--track);position:relative;transition:background .2s}
+.sw .tr::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.sw[aria-checked=true] .tr{background:var(--gold)}.sw[aria-checked=true] .tr::after{transform:translateX(18px)}
+.dishes{font-size:13px;color:var(--mute)}
+main{padding:4px 0 40px}
+.sec{display:flex;justify-content:space-between;align-items:baseline;padding:22px 18px 8px;border-bottom:2px solid var(--ink);margin:0 0 0}
+.sec h2{font:700 20px "Familjen Grotesk",sans-serif;margin:0}.sec span{color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
+.row{flex:1;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:12px 18px;min-height:60px;cursor:pointer}
+.ck{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--mute);display:grid;place-items:center}
+.ck svg{width:16px;height:16px;opacity:0;stroke:var(--goldInk)}
+.nm{font-weight:600}.dt{display:block;font-size:14px;color:var(--mute);margin-top:2px}
+.opt{font-size:12px;font-weight:700;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 8px;white-space:nowrap}
+.row.done .ck{background:var(--gold);border-color:var(--gold)}.row.done .ck svg{opacity:1}
+.row.done .nm,.row.done .dt{text-decoration:line-through;opacity:.55}
+.del{background:none;border:0;color:var(--mute);min-width:44px;min-height:44px;font-size:22px;cursor:pointer}
+.add{display:flex;gap:10px;padding:16px 18px}
+.add input{flex:1;min-height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--card);font-size:16px}
+.add button{min-height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--gold);color:var(--goldInk);font-weight:700;cursor:pointer}
+.empty{margin:28px 18px;padding:22px;border-radius:16px;background:var(--card);font-size:18px;font-weight:600;text-align:center}
+.foot{display:flex;justify-content:center;padding:18px}
+.ghost{border:1.5px solid var(--line);background:transparent;border-radius:12px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:600;color:var(--mute)}
+.ghost.arm{border-color:#b3261e;color:#b3261e}
+@media(min-width:700px){main,.hw{max-width:640px;margin-inline:auto}}
+@media(prefers-reduced-motion:reduce){.bar i,.sw .tr,.sw .tr::after{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="hw">
+<div class="top"><h1>Shopping list</h1><div class="count" id="count"></div></div>
+<div class="bar"><i id="bar"></i></div>
+<div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="false"><span class="tr" aria-hidden="true"></span>Hide done</button><span class="dishes">Thanksgiving 2026</span></div>
+</div></header>
+<main id="main"></main>
+<script>
+{
+const LIST=[
+ ['Meat',[['m1','Smoked ham hock, 1','About 1–1¼ lb'],['m2','Beef tenderloin','Frozen']]],
+ ['Produce',[['p1','Collard greens, 2 bunches','About 2 lb'],['p2','Yukon Gold potatoes, 2 lb',''],['p3','Fresh cranberries, 5 oz','One 12-oz bag; frozen works too'],['p4','Small orange, 1',''],['p5','Yellow onion, 1 medium',''],['p6','Shallot, 1',''],['p7','Garlic, 3 cloves','1 head'],['p8','Fresh thyme, 1 small package','',true]]],
+ ['Dairy and eggs',[['d1','Heavy cream, 1½ cups','1 pint'],['d2','Whole milk, about 1½ cups','1 quart'],['d3','Large eggs, 5','3 yolks + 2 whole'],['d4','Unsalted butter, about 1½ sticks','1 lb'],['d5','Sour cream, ½ cup','1 pint']]],
+ ['Pantry and condiments',[['c1','Chow-chow relish, 1 jar',''],['c2','Low-sodium beef stock, 2–2½ cups','One 32-oz carton'],['c3','Low-sodium chicken stock, 4 cups','One 32-oz carton'],['c4','Dry red wine, ¼ cup','',true],['c5','Worcestershire sauce',''],['c6','Apple cider vinegar',''],['c7','Granulated sugar, about ¾ cup',''],['c8','Brown sugar, 1 tsp',''],['c9','All-purpose flour, about ⅓ cup',''],['c10','Vanilla extract',''],['c11','Honey',''],['c12','Red pepper flakes',''],['c13','Kosher salt, black pepper, olive oil, neutral oil',''],['c14','Canned cranberry sauce, 2 cans','']]],
+ ['Frozen',[['f1','Frozen corn kernels, 3 cups','One 16-oz bag']]]
+];
+const KEY='tg26-shop';
+let st={done:[],hide:false,extra:[]};
+try{st=Object.assign(st,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
+let done=new Set(st.done),armT=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({done:[...done],hide:st.hide,extra:st.extra}))}catch(e){}};
+const CK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const main=document.getElementById('main'),hide=document.getElementById('hide');
+function sections(){return [...LIST,['Extras',st.extra.map(x=>[x.id,x.name,'',false,true])]]}
+function render(){
+ const all=sections().flatMap(s=>s[1]),n=all.filter(i=>done.has(i[0])).length,left=all.length-n;
+ document.getElementById('count').innerHTML=`${left}<small>to get</small>`;
+ document.getElementById('bar').style.width=(all.length?Math.round(n/all.length*100):0)+'%';
+ hide.setAttribute('aria-checked',st.hide);
+ let html='';
+ for(const [name,items] of sections()){
+  const shown=items.filter(i=>!(st.hide&&done.has(i[0])));
+  if(name!=='Extras'&&!shown.length)continue;
+  const got=items.filter(i=>done.has(i[0])).length;
+  html+=`<div class="sec"><h2>${name}</h2><span>${got}/${items.length}</span></div>`;
+  html+=shown.map(([id,nm,dt,opt,mine])=>`<div style="display:flex"><button class="row${done.has(id)?' done':''}" data-id="${id}" aria-pressed="${done.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span><span class="nm">${esc(nm)}</span>${dt?`<span class="dt">${esc(dt)}</span>`:''}</span>${opt?'<span class="opt">Optional</span>':'<span></span>'}</button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)}">×</button>`:''}</div>`).join('');
+  if(name==='Extras')html+=`<form class="add" id="add"><input id="newItem" placeholder="Paper towels" aria-label="Add an item" autocomplete="off"><button type="submit">Add</button></form>`;
+ }
+ if(left===0)html=`<div class="empty">Everything's in the cart.</div>`+html;
+ html+=`<div class="foot"><button class="ghost" id="reset">Uncheck everything</button></div>`;
+ main.innerHTML=html;
+}
+main.addEventListener('click',e=>{
+ const d=e.target.closest('[data-del]');if(d){st.extra=st.extra.filter(x=>x.id!==d.dataset.del);done.delete(d.dataset.del);save();render();return}
+ const r=e.target.closest('.row');if(r){const id=r.dataset.id;done.has(id)?done.delete(id):done.add(id);save();render();return}
+ const b=e.target.closest('#reset');if(b){
+  if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again to uncheck all';clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove('arm');b.textContent='Uncheck everything'},3000);return}
+  done.clear();save();render()}
+});
+main.addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('newItem'),v=i.value.trim();if(!v)return;st.extra.push({id:'x'+Date.now(),name:v});save();render();document.getElementById('newItem').focus()});
+hide.addEventListener('click',()=>{st.hide=!st.hide;save();render()});
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+}
+</script>
+</body>
+</html>
