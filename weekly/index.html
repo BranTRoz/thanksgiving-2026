@@ -92,16 +92,16 @@ const BASE=[
  ['house','Household and paper',[['foil','Foil'],['foilpans','Foil pans, 8×8'],['bounty','Bounty paper towels'],['tp','Toilet paper'],['garbage','Garbage bags'],['windex','Windex']]]
 ];
 const KEY='weekly-groceries';
-let st={need:[],got:[],custom:[],removed:[],tab:null,hide:false,edit:false,lastSec:'produce'};
+let st={need:[],got:[],custom:[],tab:null,hide:false};
 try{st=Object.assign(st,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
-let need=new Set(st.need),got=new Set(st.got),removed=new Set(st.removed),armT=null,err='';
+let need=new Set(st.need),got=new Set(st.got),armT=null,err='';
 if(!st.tab)st.tab=need.size?'shop':'plan';
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({need:[...need],got:[...got],custom:st.custom,removed:[...removed],tab:st.tab,hide:st.hide,edit:false,lastSec:st.lastSec}))}catch(e){}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({need:[...need],got:[...got],custom:st.custom,tab:st.tab,hide:st.hide}))}catch(e){}};
 const CK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const head=document.getElementById('head'),main=document.getElementById('main');
-const secs=()=>BASE.map(([k,name,items])=>[k,name,[...items.filter(i=>!removed.has(i[0])),...st.custom.filter(c=>c.sec===k).map(c=>[c.id,c.name])]]);
-const addForm=label=>`<form class="add" id="add"><h3>${label}</h3><div class="f"><input id="newName" placeholder="Paper plates" aria-label="Item name" autocomplete="off"><button type="submit">Add</button></div><select id="newSec" aria-label="Aisle">${BASE.map(([k,n])=>`<option value="${k}"${k===st.lastSec?' selected':''}>${n}</option>`).join('')}</select>${err?`<p class="err">${err}</p>`:''}</form>`;
+const secs=()=>[...BASE.map(([k,name,items])=>[k,name,items]),['other','Other items',st.custom.map(c=>[c.id,c.name,true])]];
+const addForm=label=>`<form class="add" id="add"><h3>${label}</h3><div class="f"><input id="newName" placeholder="Paper plates" aria-label="Item name" autocomplete="off"><button type="submit">Add</button></div>${err?`<p class="err">${err}</p>`:''}</form>`;
 function renderHead(){
  const total=need.size,inCart=[...need].filter(id=>got.has(id)).length,left=total-inCart;
  const tabs=`<div class="seg" role="tablist"><button role="tab" data-tab="plan" aria-selected="${st.tab==='plan'}">Plan</button><button role="tab" data-tab="shop" aria-selected="${st.tab==='shop'}">Shop</button></div>`;
@@ -114,12 +114,12 @@ function renderHead(){
 function renderPlan(){
  let h='';
  for(const [k,name,items] of secs()){
-  if(!items.length&&!st.edit)continue;
+  if(!items.length)continue;
   h+=`<div class="sec"><h2>${name}</h2><span>${items.filter(i=>need.has(i[0])).length}/${items.length}</span></div>`;
-  h+=items.map(([id,nm])=>`<div class="line"><button class="row${need.has(id)?' on':''}" data-pick="${id}" aria-pressed="${need.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span class="nm">${esc(nm)}</span></button>${st.edit?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)} from your list">×</button>`:''}</div>`).join('');
+  h+=items.map(([id,nm,mine])=>`<div class="line"><button class="row${need.has(id)?' on':''}" data-pick="${id}" aria-pressed="${need.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span class="nm">${esc(nm)}</span></button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)} from your list">×</button>`:''}</div>`).join('');
  }
  h+=addForm('Add an item');
- h+=`<div class="foot"><button class="ghost" id="editBtn" aria-pressed="${st.edit}">${st.edit?'Done editing':'Edit list'}</button><button class="ghost" id="newWeek">Start a new week</button>${removed.size?'<button class="ghost" id="restore">Restore removed items</button>':''}</div>`;
+ h+=`<div class="foot"><button class="ghost" id="newWeek">Clear this week’s list</button></div>`;
  main.className='plan';main.innerHTML=h;
 }
 function renderShop(){
@@ -134,31 +134,29 @@ function renderShop(){
  }
  if(!left)h=`<div class="empty"><p>Everything’s in the cart.</p></div>`+h;
  h+=addForm('Add an item to this week');
- h+=`<div class="foot"><button class="ghost" id="newWeek">Start a new week</button></div>`;
+ h+=`<div class="foot"><button class="ghost" id="newWeek">Clear this week’s list</button></div>`;
  main.className='shop';main.innerHTML=h;
 }
 function render(){renderHead();st.tab==='plan'?renderPlan():renderShop()}
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab]');if(t){st.tab=t.dataset.tab;st.edit=false;err='';save();render();window.scrollTo(0,0);return}
+ const t=e.target.closest('[data-tab]');if(t){st.tab=t.dataset.tab;err='';save();render();window.scrollTo(0,0);return}
  if(e.target.closest('#hide')){st.hide=!st.hide;save();render();return}
  const p=e.target.closest('[data-pick]');if(p){const id=p.dataset.pick;if(need.has(id)){need.delete(id);got.delete(id)}else need.add(id);save();render();return}
  const g=e.target.closest('[data-got]');if(g){const id=g.dataset.got;got.has(id)?got.delete(id):got.add(id);save();render();return}
- const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;if(st.custom.some(c=>c.id===id))st.custom=st.custom.filter(c=>c.id!==id);else removed.add(id);need.delete(id);got.delete(id);save();render();return}
- if(e.target.closest('#editBtn')){st.edit=!st.edit;render();return}
- if(e.target.closest('#restore')){removed.clear();save();render();return}
+ const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;st.custom=st.custom.filter(c=>c.id!==id);need.delete(id);got.delete(id);save();render();return}
  const w=e.target.closest('#newWeek');if(w){
-  if(!w.classList.contains('arm')){w.classList.add('arm');w.textContent='Tap again to clear this week';clearTimeout(armT);armT=setTimeout(()=>{w.classList.remove('arm');w.textContent='Start a new week'},3000);return}
+  if(!w.classList.contains('arm')){w.classList.add('arm');w.textContent='Tap again to clear';clearTimeout(armT);armT=setTimeout(()=>{w.classList.remove('arm');w.textContent='Clear this week’s list'},3000);return}
   need.clear();got.clear();st.tab='plan';save();render();window.scrollTo(0,0)}
 });
 main.addEventListener('submit',e=>{
  e.preventDefault();
- const name=document.getElementById('newName').value.trim(),sec=document.getElementById('newSec').value;
+ const name=document.getElementById('newName').value.trim();
  if(!name){err='Type an item name first.';render();document.getElementById('newName').focus();return}
  const all=secs().flatMap(s=>s[2]);
  const dup=all.find(i=>i[1].toLowerCase()===name.toLowerCase());
  const id=dup?dup[0]:'c'+Date.now();
- if(!dup)st.custom.push({id,name,sec});
- need.add(id);st.lastSec=sec;err='';save();render();
+ if(!dup)st.custom.push({id,name});
+ need.add(id);err='';save();render();
  const f=document.getElementById('newName');if(f)f.focus();
 });
 main.addEventListener('input',e=>{if(e.target.id==='newName'&&err){err='';const p=main.querySelector('.err');if(p)p.remove()}});
