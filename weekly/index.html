@@ -16,145 +16,108 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* VOICE: the same calm, one-handed list as the Thanksgiving shopping app, built for every week.
-   IDEA: a standing grocery checklist: plan at home by picking from your usuals, then shop only what you picked.
-   PICTURE: the list itself, big tap rows in aisle order, with a Plan / Shop switch on top.
-   COLOUR and TYPE: warm stone header, white list, sage for picked items, gold for items in the cart; Familjen Grotesk + Figtree.
-   LAYOUT: one column, sticky header with the mode switch and count, sections down the page, add form at the end. */
+/* VOICE: a calm weekly list you can use one-handed in a grocery aisle.
+   IDEA: the paper list in your pocket, but it crosses itself off and hides what's done.
+   PICTURE: the list itself, big tap rows grouped by store section, with a running count on top.
+   COLOUR and TYPE: warm stone header, white list, gold checks; Familjen Grotesk + Figtree, matching the cooking guide.
+   LAYOUT: one column, sticky header with progress and a Hide done switch, sections down the page. */
 :root{color-scheme:light dark;
 --bg:light-dark(#ffffff,#16110f);--ink:light-dark(#1d1916,#f3ece6);--mute:light-dark(#655c55,#b9ada3);
 --line:light-dark(#ebe4dd,#352c27);--head:light-dark(#f3eee8,#2a241f);--track:light-dark(#e2d9cf,#4a3f36);
---gold:#e8a92b;--goldInk:#3a2600;--sage:light-dark(#5f8a4f,#8fbf7c);--sageBg:light-dark(#eef5ea,#1f2a1b);--sageInk:light-dark(#ffffff,#12200d);
---card:light-dark(#faf6f2,#211a17);--seg:light-dark(#e6ddd3,#3a312a);--segOn:light-dark(#ffffff,#57493e)}
+--gold:#e8a92b;--goldInk:#3a2600;--card:light-dark(#faf6f2,#211a17)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 Figtree,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
-button,input,select{font:inherit;color:inherit;touch-action:manipulation}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button,input{font:inherit;color:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 header{position:sticky;top:0;z-index:3;background:var(--head);border-bottom:1px solid var(--line);padding:14px 18px 12px}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{font:700 24px/1.1 "Familjen Grotesk",Figtree,sans-serif;margin:0}
 .count{font:700 22px "Familjen Grotesk",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .count small{font:500 13px Figtree,sans-serif;color:var(--mute);margin-left:4px}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--seg);border-radius:12px;padding:3px;margin-top:12px}
-.seg button{border:0;background:transparent;border-radius:10px;min-height:40px;font-weight:700;font-size:16px;cursor:pointer}
-.seg button[aria-selected=true]{background:var(--segOn);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.bar{height:6px;border-radius:9px;background:var(--track);overflow:hidden;margin:12px 0 4px}.bar i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.bar{height:6px;border-radius:9px;background:var(--track);overflow:hidden;margin:10px 0 10px}.bar i{display:block;height:100%;background:var(--gold);transition:width .3s}
 .ctrl{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .sw{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;min-height:44px;cursor:pointer;font-weight:600;font-size:15px}
 .sw .tr{width:46px;height:28px;border-radius:99px;background:var(--track);position:relative;transition:background .2s}
 .sw .tr::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
 .sw[aria-checked=true] .tr{background:var(--gold)}.sw[aria-checked=true] .tr::after{transform:translateX(18px)}
-.hint{font-size:14px;color:var(--mute);margin:10px 0 0}
+.dishes{font-size:13px;color:var(--mute)}
 main{padding:4px 0 40px}
-.sec{display:flex;justify-content:space-between;align-items:baseline;padding:22px 18px 8px;border-bottom:2px solid var(--ink)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;padding:22px 18px 8px;border-bottom:2px solid var(--ink);margin:0 0 0}
 .sec h2{font:700 20px "Familjen Grotesk",sans-serif;margin:0}.sec span{color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
-.line{display:flex;border-bottom:1px solid var(--line)}
-.row{flex:1;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;align-items:center;text-align:left;background:transparent;border:0;padding:12px 18px;min-height:58px;cursor:pointer}
+.row{flex:1;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:12px 18px;min-height:60px;cursor:pointer}
 .ck{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--mute);display:grid;place-items:center}
-.ck svg{width:16px;height:16px;opacity:0}
-.nm{font-weight:600}
-.plan .row.on{background:var(--sageBg)}.plan .row.on .ck{background:var(--sage);border-color:var(--sage)}.plan .row.on .ck svg{opacity:1;stroke:var(--sageInk)}
-.shop .row.done .ck{background:var(--gold);border-color:var(--gold)}.shop .row.done .ck svg{opacity:1;stroke:var(--goldInk)}
-.shop .row.done .nm{text-decoration:line-through;opacity:.55}
-.del{background:none;border:0;color:#b3261e;min-width:52px;min-height:44px;font-size:24px;cursor:pointer}
-.add{padding:20px 18px 6px;display:grid;gap:10px}
-.add h3{font:700 18px "Familjen Grotesk",sans-serif;margin:0}
-.add .f{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
-.add input,.add select{min-height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--card);font-size:16px;width:100%}
-.add button{min-height:48px;padding:0 20px;border:0;border-radius:12px;background:var(--gold);color:var(--goldInk);font-weight:700;cursor:pointer}
-.err{color:#b3261e;font-size:14px;margin:0}
-.empty{margin:28px 18px;padding:22px;border-radius:16px;background:var(--card);text-align:center}
-.empty p{margin:0 0 14px;font-size:18px;font-weight:600}
-.go{border:0;border-radius:12px;background:var(--gold);color:var(--goldInk);font-weight:700;min-height:48px;padding:0 20px;cursor:pointer}
-.foot{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:22px 18px}
+.ck svg{width:16px;height:16px;opacity:0;stroke:var(--goldInk)}
+.nm{font-weight:600}.dt{display:block;font-size:14px;color:var(--mute);margin-top:2px}
+.opt{font-size:12px;font-weight:700;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 8px;white-space:nowrap}
+.row.done .ck{background:var(--gold);border-color:var(--gold)}.row.done .ck svg{opacity:1}
+.row.done .nm,.row.done .dt{text-decoration:line-through;opacity:.55}
+.del{background:none;border:0;color:var(--mute);min-width:44px;min-height:44px;font-size:22px;cursor:pointer}
+.add{display:flex;gap:10px;padding:16px 18px}
+.add input{flex:1;min-height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--card);font-size:16px}
+.add button{min-height:48px;padding:0 18px;border:0;border-radius:12px;background:var(--gold);color:var(--goldInk);font-weight:700;cursor:pointer}
+.empty{margin:28px 18px;padding:22px;border-radius:16px;background:var(--card);font-size:18px;font-weight:600;text-align:center}
+.foot{display:flex;justify-content:center;padding:18px}
 .ghost{border:1.5px solid var(--line);background:transparent;border-radius:12px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:600;color:var(--mute)}
 .ghost.arm{border-color:#b3261e;color:#b3261e}
-.ghost[aria-pressed=true]{border-color:var(--ink);color:var(--ink)}
 @media(min-width:700px){main,.hw{max-width:640px;margin-inline:auto}}
 @media(prefers-reduced-motion:reduce){.bar i,.sw .tr,.sw .tr::after{transition:none}}
 </style>
 </head>
 <body>
-<header><div class="hw" id="head"></div></header>
+<header><div class="hw">
+<div class="top"><h1>Groceries</h1><div class="count" id="count"></div></div>
+<div class="bar"><i id="bar"></i></div>
+<div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="false"><span class="tr" aria-hidden="true"></span>Hide done</button><span class="dishes">Weekly list</span></div>
+</div></header>
 <main id="main"></main>
 <script>
 {
-const BASE=[
- ['produce','Produce',[['bananas','Bananas'],['grapes','Grapes'],['fruit','Fruit (seasonal)'],['salad','Salad mix'],['avocados','Avocados'],['carrots','Carrots'],['celery','Celery'],['onions','Onions'],['potatoes','Potatoes']]],
- ['bakery','Bakery',[['bread','Bread'],['baguette','Baguette']]],
- ['meat','Meat and seafood',[['thighs','Chicken thighs'],['salmon','Salmon'],['steak','Steak'],['stewbeef','Stew beef']]],
- ['dairy','Dairy and eggs',[['eggs','Eggs'],['butter','Butter'],['soymilk','Soy milk (Silk Vanilla)'],['yogurt','Yogurt, Meyer lemon'],['whips','Yoplait Whips'],['cheesesticks','Cheese sticks'],['cheddar','Sliced cheddar'],['shredded','Shredded cheese']]],
- ['pantry','Pantry',[['cereal','Cereal'],['rice','Rice'],['pasta','Pasta'],['noodles','Egg noodles'],['lentils','Lentils'],['driedpeas','Dried peas'],['whitebeans','White beans'],['tomatoes','Crushed tomatoes'],['chxbroth','Chicken broth'],['beefbroth','Beef broth'],['artichokes','Artichoke hearts, canned'],['avooil','Avocado oil'],['sunbutter','SunButter'],['jif','Jif peanut butter'],['honey','Honey'],['pancake','Pancake mix']]],
- ['snacks','Snacks',[['crackers','Crackers (for cheese)'],['cornchips','Corn chips'],['potatochips','Potato chips'],['pretzels','Pretzels'],['licorice','Licorice'],['fresca','Fresca']]],
- ['bev','Beverages',[['coffee','Coffee'],['tea','Tea'],['applejuice','Apple juice']]],
- ['frozen','Frozen',[['bao','Bao buns'],['peas','Peas'],['meatballs','Turkey meatballs']]],
- ['house','Household and paper',[['foil','Foil'],['foilpans','Foil pans, 8×8'],['bounty','Bounty paper towels'],['tp','Toilet paper'],['garbage','Garbage bags'],['windex','Windex']]]
-];
-const KEY='weekly-groceries';
-let st={need:[],got:[],custom:[],tab:null,hide:false};
+const LIST=[["Produce",[["w-bananas","Bananas",''],["w-grapes","Grapes",''],["w-fruit-seasonal","Fruit (seasonal)",''],["w-salad-mix","Salad mix",''],["w-avocados","Avocados",''],["w-carrots","Carrots",''],["w-celery","Celery",''],["w-onions","Onions",''],["w-potatoes","Potatoes",'']]],
+ ["Bakery",[["w-bread","Bread",''],["w-baguette","Baguette",'']]],
+ ["Meat and seafood",[["w-chicken-thighs","Chicken thighs",''],["w-salmon","Salmon",''],["w-steak","Steak",''],["w-stew-beef","Stew beef",'']]],
+ ["Dairy and eggs",[["w-eggs","Eggs",''],["w-butter","Butter",''],["w-soy-milk-silk-vanilla","Soy milk (Silk Vanilla)",''],["w-yogurt-meyer-lemon","Yogurt, Meyer lemon",''],["w-yoplait-whips","Yoplait Whips",''],["w-cheese-sticks","Cheese sticks",''],["w-sliced-cheddar","Sliced cheddar",''],["w-shredded-cheese","Shredded cheese",'']]],
+ ["Pantry",[["w-cereal","Cereal",''],["w-rice","Rice",''],["w-pasta","Pasta",''],["w-egg-noodles","Egg noodles",''],["w-lentils","Lentils",''],["w-dried-peas","Dried peas",''],["w-white-beans","White beans",''],["w-crushed-tomatoes","Crushed tomatoes",''],["w-chicken-broth","Chicken broth",''],["w-beef-broth","Beef broth",''],["w-artichoke-hearts-canned","Artichoke hearts, canned",''],["w-avocado-oil","Avocado oil",''],["w-sunbutter","SunButter",''],["w-jif-peanut-butter","Jif peanut butter",''],["w-honey","Honey",''],["w-pancake-mix","Pancake mix",'']]],
+ ["Snacks",[["w-crackers-for-cheese","Crackers (for cheese)",''],["w-corn-chips","Corn chips",''],["w-potato-chips","Potato chips",''],["w-pretzels","Pretzels",''],["w-licorice","Licorice",''],["w-fresca","Fresca",'']]],
+ ["Beverages",[["w-coffee","Coffee",''],["w-tea","Tea",''],["w-apple-juice","Apple juice",'']]],
+ ["Frozen",[["w-bao-buns","Bao buns",''],["w-peas","Peas",''],["w-turkey-meatballs","Turkey meatballs",'']]],
+ ["Household and paper",[["w-foil","Foil",''],["w-foil-pans-8-8","Foil pans, 8×8",''],["w-bounty-paper-towels","Bounty paper towels",''],["w-toilet-paper","Toilet paper",''],["w-garbage-bags","Garbage bags",''],["w-windex","Windex",'']]]];
+const KEY='weekly-list';
+let st={done:[],hide:false,extra:[]};
 try{st=Object.assign(st,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
-let need=new Set(st.need),got=new Set(st.got),err='';
-if(!st.tab)st.tab=need.size?'shop':'plan';
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({need:[...need],got:[...got],custom:st.custom,tab:st.tab,hide:st.hide}))}catch(e){}};
+let done=new Set(st.done),armT=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({done:[...done],hide:st.hide,extra:st.extra}))}catch(e){}};
 const CK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const head=document.getElementById('head'),main=document.getElementById('main');
-const secs=()=>[...BASE.map(([k,name,items])=>[k,name,items]),['other','Other items',st.custom.map(c=>[c.id,c.name,true])]];
-const addForm=label=>`<form class="add" id="add"><h3>${label}</h3><div class="f"><input id="newName" placeholder="Paper plates" aria-label="Item name" autocomplete="off"><button type="submit">Add</button></div>${err?`<p class="err">${err}</p>`:''}</form>`;
-function renderHead(){
- const total=need.size,inCart=[...need].filter(id=>got.has(id)).length,left=total-inCart;
- const tabs=`<div class="seg" role="tablist"><button role="tab" data-tab="plan" aria-selected="${st.tab==='plan'}">Plan</button><button role="tab" data-tab="shop" aria-selected="${st.tab==='shop'}">Shop</button></div>`;
- if(st.tab==='plan'){
-  head.innerHTML=`<div class="top"><h1>Groceries</h1><div class="count">${total}<small>on this week’s list</small></div></div>${tabs}<p class="hint">Tap what you need this week.</p>`;
- }else{
-  head.innerHTML=`<div class="top"><h1>Groceries</h1><div class="count">${left}<small>to get</small></div></div>${tabs}<div class="bar"><i style="width:${total?Math.round(inCart/total*100):0}%"></i></div><div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="${st.hide}"><span class="tr" aria-hidden="true"></span>Hide done</button></div>`;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const main=document.getElementById('main'),hide=document.getElementById('hide');
+function sections(){return [...LIST,['Extras',st.extra.map(x=>[x.id,x.name,'',false,true])]]}
+function render(){
+ const all=sections().flatMap(s=>s[1]),n=all.filter(i=>done.has(i[0])).length,left=all.length-n;
+ document.getElementById('count').innerHTML=`${left}<small>to get</small>`;
+ document.getElementById('bar').style.width=(all.length?Math.round(n/all.length*100):0)+'%';
+ hide.setAttribute('aria-checked',st.hide);
+ let html='';
+ for(const [name,items] of sections()){
+  const shown=items.filter(i=>!(st.hide&&done.has(i[0])));
+  if(name!=='Extras'&&!shown.length)continue;
+  const got=items.filter(i=>done.has(i[0])).length;
+  html+=`<div class="sec"><h2>${name}</h2><span>${got}/${items.length}</span></div>`;
+  html+=shown.map(([id,nm,dt,opt,mine])=>`<div style="display:flex"><button class="row${done.has(id)?' done':''}" data-id="${id}" aria-pressed="${done.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span><span class="nm">${esc(nm)}</span>${dt?`<span class="dt">${esc(dt)}</span>`:''}</span>${opt?'<span class="opt">Optional</span>':'<span></span>'}</button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)}">×</button>`:''}</div>`).join('');
+  if(name==='Extras')html+=`<form class="add" id="add"><input id="newItem" placeholder="Paper towels" aria-label="Add an item" autocomplete="off"><button type="submit">Add</button></form>`;
  }
+ if(left===0)html=`<div class="empty">Everything's in the cart.</div>`+html;
+ html+=`<div class="foot"><button class="ghost" id="reset">Uncheck everything</button></div>`;
+ main.innerHTML=html;
 }
-function renderPlan(){
- let h='';
- for(const [k,name,items] of secs()){
-  if(!items.length)continue;
-  h+=`<div class="sec"><h2>${name}</h2><span>${items.filter(i=>need.has(i[0])).length}/${items.length}</span></div>`;
-  h+=items.map(([id,nm,mine])=>`<div class="line"><button class="row${need.has(id)?' on':''}" data-pick="${id}" aria-pressed="${need.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span class="nm">${esc(nm)}</span></button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)} from your list">×</button>`:''}</div>`).join('');
- }
- h+=addForm('Add an item');
- main.className='plan';main.innerHTML=h;
-}
-function renderShop(){
- if(!need.size){main.className='shop';main.innerHTML=`<div class="empty"><p>Nothing on this week’s list yet.</p><button class="go" data-tab="plan">Pick items in Plan</button></div>`+addForm('Add an item to this week');return}
- let h='',left=0;
- for(const [k,name,items] of secs()){
-  const mine=items.filter(i=>need.has(i[0]));if(!mine.length)continue;
-  const shown=mine.filter(i=>!(st.hide&&got.has(i[0])));left+=mine.filter(i=>!got.has(i[0])).length;
-  if(!shown.length)continue;
-  h+=`<div class="sec"><h2>${name}</h2><span>${mine.filter(i=>got.has(i[0])).length}/${mine.length}</span></div>`;
-  h+=shown.map(([id,nm])=>`<div class="line"><button class="row${got.has(id)?' done':''}" data-got="${id}" aria-pressed="${got.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span class="nm">${esc(nm)}</span></button></div>`).join('');
- }
- if(!left)h=`<div class="empty"><p>Everything’s in the cart.</p></div>`+h;
- h+=addForm('Add an item to this week');
- main.className='shop';main.innerHTML=h;
-}
-function render(){renderHead();st.tab==='plan'?renderPlan():renderShop()}
-document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab]');if(t){st.tab=t.dataset.tab;err='';save();render();window.scrollTo(0,0);return}
- if(e.target.closest('#hide')){st.hide=!st.hide;save();render();return}
- const p=e.target.closest('[data-pick]');if(p){const id=p.dataset.pick;if(need.has(id)){need.delete(id);got.delete(id)}else need.add(id);save();render();return}
- const g=e.target.closest('[data-got]');if(g){const id=g.dataset.got;got.has(id)?got.delete(id):got.add(id);save();render();return}
- const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;st.custom=st.custom.filter(c=>c.id!==id);need.delete(id);got.delete(id);save();render();return}
+main.addEventListener('click',e=>{
+ const d=e.target.closest('[data-del]');if(d){st.extra=st.extra.filter(x=>x.id!==d.dataset.del);done.delete(d.dataset.del);save();render();return}
+ const r=e.target.closest('.row');if(r){const id=r.dataset.id;done.has(id)?done.delete(id):done.add(id);save();render();return}
+ const b=e.target.closest('#reset');if(b){
+  if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again to uncheck all';clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove('arm');b.textContent='Uncheck everything'},3000);return}
+  done.clear();save();render()}
 });
-main.addEventListener('submit',e=>{
- e.preventDefault();
- const name=document.getElementById('newName').value.trim();
- if(!name){err='Type an item name first.';render();document.getElementById('newName').focus();return}
- const all=secs().flatMap(s=>s[2]);
- const dup=all.find(i=>i[1].toLowerCase()===name.toLowerCase());
- const id=dup?dup[0]:'c'+Date.now();
- if(!dup)st.custom.push({id,name});
- need.add(id);err='';save();render();
- const f=document.getElementById('newName');if(f)f.focus();
-});
-main.addEventListener('input',e=>{if(e.target.id==='newName'&&err){err='';const p=main.querySelector('.err');if(p)p.remove()}});
+main.addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('newItem'),v=i.value.trim();if(!v)return;st.extra.push({id:'x'+Date.now(),name:v});save();render();document.getElementById('newItem').focus()});
+hide.addEventListener('click',()=>{st.hide=!st.hide;save();render()});
 render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 }
