@@ -24,7 +24,7 @@
 :root{color-scheme:light dark;
 --bg:light-dark(#ffffff,#16110f);--ink:light-dark(#1d1916,#f3ece6);--mute:light-dark(#655c55,#b9ada3);
 --line:light-dark(#ebe4dd,#352c27);--head:light-dark(#f3eee8,#2a241f);--track:light-dark(#e2d9cf,#4a3f36);
---gold:#e8a92b;--goldInk:#3a2600;--card:light-dark(#faf6f2,#211a17)}
+--gold:#e8a92b;--sage:light-dark(#5f8a4f,#8fbf7c);--sageBg:light-dark(#eef5ea,#1f2a1b);--sageInk:light-dark(#ffffff,#12200d);--goldInk:#3a2600;--card:light-dark(#faf6f2,#211a17)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 Figtree,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
@@ -60,16 +60,17 @@ main{padding:4px 0 40px}
 .foot{display:flex;justify-content:center;padding:18px}
 .ghost{border:1.5px solid var(--line);background:transparent;border-radius:12px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:600;color:var(--mute)}
 .ghost.arm{border-color:#b3261e;color:#b3261e}
+.pill{border:1.5px solid var(--ink);background:transparent;border-radius:999px;min-height:40px;padding:0 16px;font-weight:700;font-size:15px;cursor:pointer}
+.go{border:0;border-radius:12px;background:var(--gold);color:var(--goldInk);font-weight:700;min-height:44px;padding:0 20px;cursor:pointer;font-size:16px}
+.hint{font-size:14px;color:var(--mute)}
+.admin .row.on{background:var(--sageBg)}.admin .row.on .ck{background:var(--sage);border-color:var(--sage)}.admin .row.on .ck svg{opacity:1;stroke:var(--sageInk)}
+.empty p{margin:0 0 14px}
 @media(min-width:700px){main,.hw{max-width:640px;margin-inline:auto}}
 @media(prefers-reduced-motion:reduce){.bar i,.sw .tr,.sw .tr::after{transition:none}}
 </style>
 </head>
 <body>
-<header><div class="hw">
-<div class="top"><h1>Groceries</h1><div class="count" id="count"></div></div>
-<div class="bar"><i id="bar"></i></div>
-<div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="false"><span class="tr" aria-hidden="true"></span>Hide done</button><span class="dishes">Weekly list</span></div>
-</div></header>
+<header><div class="hw" id="head"></div></header>
 <main id="main"></main>
 <script>
 {
@@ -82,42 +83,64 @@ const LIST=[["Produce",[["w-bananas","Bananas",''],["w-grapes","Grapes",''],["w-
  ["Beverages",[["w-coffee","Coffee",''],["w-tea","Tea",''],["w-apple-juice","Apple juice",'']]],
  ["Frozen",[["w-bao-buns","Bao buns",''],["w-peas","Peas",''],["w-turkey-meatballs","Turkey meatballs",'']]],
  ["Household and paper",[["w-foil","Foil",''],["w-foil-pans-8-8","Foil pans, 8×8",''],["w-bounty-paper-towels","Bounty paper towels",''],["w-toilet-paper","Toilet paper",''],["w-garbage-bags","Garbage bags",''],["w-windex","Windex",'']]]];
-const KEY='weekly-list';
-let st={done:[],hide:false,extra:[]};
+const KEY='weekly-list-v2';
+let st={sel:[],done:[],hide:false,extra:[],mode:null};
 try{st=Object.assign(st,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
-let done=new Set(st.done),armT=null;
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({done:[...done],hide:st.hide,extra:st.extra}))}catch(e){}};
+let sel=new Set(st.sel),done=new Set(st.done),armT=null,armR=null;
+if(!st.mode)st.mode=sel.size?'shop':'admin';
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({sel:[...sel],done:[...done],hide:st.hide,extra:st.extra,mode:st.mode}))}catch(e){}};
 const CK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const main=document.getElementById('main'),hide=document.getElementById('hide');
-function sections(){return [...LIST,['Extras',st.extra.map(x=>[x.id,x.name,'',false,true])]]}
-function render(){
- const all=sections().flatMap(s=>s[1]),n=all.filter(i=>done.has(i[0])).length,left=all.length-n;
- document.getElementById('count').innerHTML=`${left}<small>to get</small>`;
- document.getElementById('bar').style.width=(all.length?Math.round(n/all.length*100):0)+'%';
- hide.setAttribute('aria-checked',st.hide);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const head=document.getElementById('head'),main=document.getElementById('main');
+const sections=()=>[...LIST,['Extras',st.extra.map(x=>[x.id,x.name,'',false,true])]];
+const addForm=()=>`<form class="add" id="add"><input id="newItem" placeholder="Paper plates" aria-label="Add an item" autocomplete="off"><button type="submit">Add</button></form>`;
+const row=(id,nm,on,cls,mine)=>`<div style="display:flex"><button class="row${on?' '+cls:''}" data-id="${id}" aria-pressed="${on}"><span class="ck" aria-hidden="true">${CK}</span><span><span class="nm">${esc(nm)}</span></span><span></span></button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)}">×</button>`:''}</div>`;
+function renderShop(){
+ const mine=sections().flatMap(s=>s[1]).filter(i=>sel.has(i[0])),n=mine.filter(i=>done.has(i[0])).length,left=mine.length-n;
+ head.innerHTML=`<div class="top"><h1>Groceries</h1><div class="count">${left}<small>to get</small></div></div><div class="bar"><i style="width:${mine.length?Math.round(n/mine.length*100):0}%"></i></div><div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="${st.hide}"><span class="tr" aria-hidden="true"></span>Hide done</button><button class="pill" data-mode="admin">Choose items</button></div>`;
+ if(!sel.size){main.className='shop';main.innerHTML=`<div class="empty"><p>No items picked for this week.</p><button class="go" data-mode="admin">Choose items</button></div><div class="sec"><h2>Extras</h2><span></span></div>${addForm()}`;return}
  let html='';
  for(const [name,items] of sections()){
-  const shown=items.filter(i=>!(st.hide&&done.has(i[0])));
+  const picked=items.filter(i=>sel.has(i[0])),shown=picked.filter(i=>!(st.hide&&done.has(i[0])));
   if(name!=='Extras'&&!shown.length)continue;
-  const got=items.filter(i=>done.has(i[0])).length;
-  html+=`<div class="sec"><h2>${name}</h2><span>${got}/${items.length}</span></div>`;
-  html+=shown.map(([id,nm,dt,opt,mine])=>`<div style="display:flex"><button class="row${done.has(id)?' done':''}" data-id="${id}" aria-pressed="${done.has(id)}"><span class="ck" aria-hidden="true">${CK}</span><span><span class="nm">${esc(nm)}</span>${dt?`<span class="dt">${esc(dt)}</span>`:''}</span>${opt?'<span class="opt">Optional</span>':'<span></span>'}</button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)}">×</button>`:''}</div>`).join('');
-  if(name==='Extras')html+=`<form class="add" id="add"><input id="newItem" placeholder="Paper towels" aria-label="Add an item" autocomplete="off"><button type="submit">Add</button></form>`;
+  html+=`<div class="sec"><h2>${name}</h2><span>${picked.filter(i=>done.has(i[0])).length}/${picked.length}</span></div>`;
+  html+=shown.map(i=>row(i[0],i[1],done.has(i[0]),'done',false)).join('');
+  if(name==='Extras')html+=addForm();
  }
- if(left===0)html=`<div class="empty">Everything's in the cart.</div>`+html;
+ if(left===0)html=`<div class="empty"><p>Everything’s in the cart.</p></div>`+html;
  html+=`<div class="foot"><button class="ghost" id="reset">Uncheck everything</button></div>`;
- main.innerHTML=html;
+ main.className='shop';main.innerHTML=html;
 }
-main.addEventListener('click',e=>{
- const d=e.target.closest('[data-del]');if(d){st.extra=st.extra.filter(x=>x.id!==d.dataset.del);done.delete(d.dataset.del);save();render();return}
- const r=e.target.closest('.row');if(r){const id=r.dataset.id;done.has(id)?done.delete(id):done.add(id);save();render();return}
+function renderAdmin(){
+ head.innerHTML=`<div class="top"><h1>Choose items</h1><div class="count">${sel.size}<small>picked</small></div></div><div class="ctrl" style="margin-top:8px"><span class="hint">Tap what you need this week.</span><button class="go" data-mode="shop">Done</button></div>`;
+ let html='';
+ for(const [name,items] of sections()){
+  html+=`<div class="sec"><h2>${name}</h2><span>${items.filter(i=>sel.has(i[0])).length}/${items.length}</span></div>`;
+  html+=items.map(i=>row(i[0],i[1],sel.has(i[0]),'on',i[4])).join('');
+  if(name==='Extras')html+=addForm();
+ }
+ html+=`<div class="foot"><button class="ghost" id="clearSel">Clear all picks</button></div>`;
+ main.className='admin';main.innerHTML=html;
+}
+function render(){st.mode==='admin'?renderAdmin():renderShop()}
+document.addEventListener('click',e=>{
+ const m=e.target.closest('[data-mode]');if(m){st.mode=m.dataset.mode;save();render();window.scrollTo(0,0);return}
+ if(e.target.closest('#hide')){st.hide=!st.hide;save();render();return}
+ const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;st.extra=st.extra.filter(x=>x.id!==id);sel.delete(id);done.delete(id);save();render();return}
+ const r=e.target.closest('.row');if(r){const id=r.dataset.id;
+  if(st.mode==='admin'){if(sel.has(id)){sel.delete(id);done.delete(id)}else sel.add(id)}
+  else{done.has(id)?done.delete(id):done.add(id)}
+  save();render();return}
  const b=e.target.closest('#reset');if(b){
   if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again to uncheck all';clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove('arm');b.textContent='Uncheck everything'},3000);return}
-  done.clear();save();render()}
+  done.clear();save();render();return}
+ const c=e.target.closest('#clearSel');if(c){
+  if(!c.classList.contains('arm')){c.classList.add('arm');c.textContent='Tap again to clear all picks';clearTimeout(armR);armR=setTimeout(()=>{c.classList.remove('arm');c.textContent='Clear all picks'},3000);return}
+  sel.clear();done.clear();save();render()}
 });
-main.addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('newItem'),v=i.value.trim();if(!v)return;st.extra.push({id:'x'+Date.now(),name:v});save();render();document.getElementById('newItem').focus()});
-hide.addEventListener('click',()=>{st.hide=!st.hide;save();render()});
+main.addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('newItem'),v=i.value.trim();if(!v)return;
+ const ex=sections().flatMap(s=>s[1]).find(x=>x[1].toLowerCase()===v.toLowerCase());
+ const id=ex?ex[0]:'x'+Date.now();if(!ex)st.extra.push({id,name:v});sel.add(id);save();render();const n=document.getElementById('newItem');if(n)n.focus()});
 render();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 }
