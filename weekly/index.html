@@ -97,8 +97,8 @@ const addForm=()=>`<form class="add" id="add"><input id="newItem" placeholder="P
 const row=(id,nm,on,cls,mine)=>`<div style="display:flex"><button class="row${on?' '+cls:''}" data-id="${id}" aria-pressed="${on}"><span class="ck" aria-hidden="true">${CK}</span><span><span class="nm">${esc(nm)}</span></span><span></span></button>${mine?`<button class="del" data-del="${id}" aria-label="Remove ${esc(nm)}">×</button>`:''}</div>`;
 function renderShop(){
  const mine=sections().flatMap(s=>s[1]).filter(i=>sel.has(i[0])),n=mine.filter(i=>done.has(i[0])).length,left=mine.length-n;
- head.innerHTML=`<div class="top"><h1>Shopping List</h1><div class="count">${left}<small>to get</small></div></div><div class="bar"><i style="width:${mine.length?Math.round(n/mine.length*100):0}%"></i></div><div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="${st.hide}"><span class="tr" aria-hidden="true"></span>Hide done</button><button class="pill" data-mode="admin">Choose items</button></div>`;
- if(!sel.size){main.className='shop';main.innerHTML=`<div class="empty"><p>No items picked for this week.</p><button class="go" data-mode="admin">Choose items</button></div><div class="sec"><h2>Extras</h2><span></span></div>${addForm()}`;return}
+ head.innerHTML=`<div class="top"><h1>Shopping List</h1><div class="count">${left}<small>to get</small></div></div><div class="bar"><i style="width:${mine.length?Math.round(n/mine.length*100):0}%"></i></div><div class="ctrl"><button class="sw" id="hide" role="switch" aria-checked="${st.hide}"><span class="tr" aria-hidden="true"></span>Hide done</button><button class="pill" data-mode="admin">Build List</button></div>`;
+ if(!sel.size){main.className='shop';main.innerHTML=`<div class="empty"><p>No items picked for this week.</p><button class="go" data-mode="admin">Build List</button></div><div class="sec"><h2>Extras</h2><span></span></div>${addForm()}`;return}
  let html='';
  for(const [name,items] of sections()){
   const picked=items.filter(i=>sel.has(i[0])),shown=picked.filter(i=>!(st.hide&&done.has(i[0])));
@@ -112,7 +112,7 @@ function renderShop(){
  main.className='shop';main.innerHTML=html;
 }
 function renderAdmin(){
- head.innerHTML=`<div class="top"><h1>Choose items</h1><div class="count">${sel.size}<small>picked</small></div></div><div class="ctrl" style="margin-top:8px"><span class="hint">Tap what you need this week.</span><button class="go" data-mode="shop">Done</button></div>`;
+ head.innerHTML=`<div class="top"><h1>Build List</h1><div class="count">${sel.size}<small>picked</small></div></div><div class="ctrl" style="margin-top:8px"><span class="hint">Tap what you need this week.</span><button class="go" data-mode="shop">Done</button></div>`;
  let html='';
  for(const [name,items] of sections()){
   html+=`<div class="sec"><h2>${name}</h2><span>${items.filter(i=>sel.has(i[0])).length}/${items.length}</span></div>`;
